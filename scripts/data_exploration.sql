@@ -134,9 +134,9 @@ Order by total_revenue desc
 -- What is the distribution of sold items across countries?
 SELECT
 	c.country,
-	COUNT(product_key) as total_item
+	SUM(quantity) as total_sold_item
 FROM gold.fact_sales f
 LEFT JOIN gold.dim_customers c
 ON f.customer_key = c.customer_key
 Group by c.country
-Order by total_item desc
+Order by total_sold_item desc
