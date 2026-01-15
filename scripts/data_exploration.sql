@@ -140,3 +140,67 @@ LEFT JOIN gold.dim_customers c
 ON f.customer_key = c.customer_key
 Group by c.country
 Order by total_sold_item desc
+
+/* -- Ranking Analysis -- */
+-- Which 5 products generate the highest revenue?
+SELECT TOP 5
+	p.product_name,
+	SUM(f.sales_amount) as revenue
+FROM gold.fact_sales f
+LEFT JOIN gold.dim_products p
+ON f.product_key = p.product_key
+Group by p.product_name
+Order by revenue desc
+
+-- Using window function
+SELECT *
+FROM (
+	SELECT
+	p.product_name,
+	SUM(f.sales_amount) as revenue,
+	ROW_NUMBER() OVER (ORDER BY SUM(f.sales_amount) DESC) as rank_products
+	FROM gold.fact_sales f
+	LEFT JOIN gold.dim_products p
+	ON f.product_key = p.product_key
+	Group by p.product_name)t
+Where rank_products <= 5
+
+-- What are the 5 worst-performing products in terms of sales?
+SELECT TOP 5
+	p.product_name,
+	SUM(f.sales_amount) as revenue
+FROM gold.fact_sales f
+LEFT JOIN gold.dim_products p
+ON f.product_key = p.product_key
+Group by p.product_name
+Order by revenue asc
+
+-- Find the top 10 customers who have generated the highest revenue
+SELECT TOP 10
+	c.customer_key,
+	c.first_name,
+	c.last_name,
+	SUM(f.sales_amount) as total_revenue
+FROM gold.fact_sales f
+LEFT JOIN gold.dim_customers c
+ON c.customer_key = f.customer_key
+Group by
+	c.customer_key,
+	c.first_name,
+	c.last_name
+Order by total_revenue desc
+
+-- Find 3 customers with fewest orders placed
+SELECT TOP 3
+	c.customer_key,
+	c.first_name,
+	c.last_name,
+	COUNT(DISTINCT order_number) as total_order
+FROM gold.fact_sales f
+LEFT JOIN gold.dim_customers c
+ON c.customer_key = f.customer_key
+Group by
+	c.customer_key,
+	c.first_name,
+	c.last_name
+Order by total_order asc
